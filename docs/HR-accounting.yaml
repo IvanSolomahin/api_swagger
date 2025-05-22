@@ -1,0 +1,822 @@
+openapi: 3.0.0
+info:
+  title: Микросервис HR и Бухгалтерии Коворкинга
+  version: 1.0.0
+  description: API для управления персоналом и бухгалтерскими операциями
+servers:
+  - url: 'https://coworking-api.example.com/hr-accounting '
+paths:
+  /employees:
+    get:
+      summary: Получение списка сотрудников
+      description: Возвращает список всех сотрудников с основной информацией
+      operationId: getEmployees
+      tags:
+        - HR
+      responses:
+        '200':
+          description: Успешный ответ
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Employee'
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal Server Error
+    post:
+      summary: Добавление нового сотрудника
+      description: Администратор может добавить нового сотрудника
+      operationId: createEmployee
+      tags:
+        - HR
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateEmployeeRequest'
+      responses:
+        '201':
+          description: Сотрудник успешно создан
+          headers:
+            Location:
+              description: URI нового ресурса
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Employee'
+        '400':
+          description: Неверные данные в запросе
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal Server Error
+  /employees/{employeeId}:
+    get:
+      summary: Получение информации о сотруднике
+      description: Возвращает детальную информацию о сотруднике по его ID
+      operationId: getEmployeeById
+      tags:
+        - HR
+      parameters:
+        - name: employeeId
+          in: path
+          description: Идентификатор сотрудника
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Успешный ответ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Employee'
+        '401':
+          description: Unauthorized
+        '404':
+          description: Сотрудник не найден
+        '500':
+          description: Internal Server Error
+    put:
+      summary: Обновление информации о сотруднике
+      description: Обновляет данные о сотруднике (например, должность, отдел)
+      operationId: updateEmployee
+      tags:
+        - HR
+      parameters:
+        - name: employeeId
+          in: path
+          description: Идентификатор сотрудника
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateEmployeeRequest'
+      responses:
+        '200':
+          description: Сотрудник успешно обновлен
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Employee'
+        '400':
+          description: Неверные данные в запросе
+        '401':
+          description: Unauthorized
+        '404':
+          description: Сотрудник не найден
+        '500':
+          description: Internal Server Error
+    delete:
+      summary: Удаление сотрудника
+      description: Администратор может удалить сотрудника
+      operationId: deleteEmployee
+      tags:
+        - HR
+      parameters:
+        - name: employeeId
+          in: path
+          description: Идентификатор сотрудника
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Сотрудник успешно удален
+        '401':
+          description: Unauthorized
+        '404':
+          description: Сотрудник не найден
+        '500':
+          description: Internal Server Error
+  /positions:
+    get:
+      summary: Получение списка должностей
+      description: Возвращает список всех должностей в компании
+      operationId: getPositions
+      tags:
+        - HR
+      responses:
+        '200':
+          description: Успешный ответ
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Position'
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal Server Error
+    post:
+      summary: Создание новой должности
+      description: Администратор может создать новую должность
+      operationId: createPosition
+      tags:
+        - HR
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreatePositionRequest'
+      responses:
+        '201':
+          description: Должность успешно создана
+          headers:
+            Location:
+              description: URI нового ресурса
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Position'
+        '400':
+          description: Неверные данные в запросе
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal Server Error
+  /positions/{positionId}:
+    get:
+      summary: Получение информации о должности
+      description: Возвращает детальную информацию о должности по её ID
+      operationId: getPositionById
+      tags:
+        - HR
+      parameters:
+        - name: positionId
+          in: path
+          description: Идентификатор должности
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Успешный ответ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Position'
+        '401':
+          description: Unauthorized
+        '404':
+          description: Должность не найдена
+        '500':
+          description: Internal Server Error
+    put:
+      summary: Обновление информации о должности
+      description: Обновляет данные о должности (например, название, зарплатный диапазон)
+      operationId: updatePosition
+      tags:
+        - HR
+      parameters:
+        - name: positionId
+          in: path
+          description: Идентификатор должности
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdatePositionRequest'
+      responses:
+        '200':
+          description: Должность успешно обновлена
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Position'
+        '400':
+          description: Неверные данные в запросе
+        '401':
+          description: Unauthorized
+        '404':
+          description: Должность не найдена
+        '500':
+          description: Internal Server Error
+    delete:
+      summary: Удаление должности
+      description: Администратор может удалить должность
+      operationId: deletePosition
+      tags:
+        - HR
+      parameters:
+        - name: positionId
+          in: path
+          description: Идентификатор должности
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Должность успешно удалена
+        '401':
+          description: Unauthorized
+        '404':
+          description: Должность не найдена
+        '500':
+          description: Internal Server Error
+  /payroll:
+    post:
+      summary: Расчет зарплаты
+      description: Администратор может инициировать расчет зарплаты за месяц
+      operationId: calculatePayroll
+      tags:
+        - HR
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CalculatePayrollRequest'
+      responses:
+        '200':
+          description: Зарплата успешно рассчитана
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PayrollResult'
+        '400':
+          description: Неверные данные в запросе
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal Server Error
+  /invoices:
+    get:
+      summary: Получение списка счетов
+      description: Возвращает список всех счетов, выставленных клиентам
+      operationId: getInvoices
+      tags:
+        - Бухгалтерия
+      responses:
+        '200':
+          description: Успешный ответ
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Invoice'
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal Server Error
+    post:
+      summary: Создание нового счета
+      description: Бухгалтер может создать новый счет клиенту
+      operationId: createInvoice
+      tags:
+        - Бухгалтерия
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateInvoiceRequest'
+      responses:
+        '201':
+          description: Счет успешно создан
+          headers:
+            Location:
+              description: URI нового ресурса
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Invoice'
+        '400':
+          description: Неверные данные в запросе
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal Server Error
+  /invoices/{invoiceId}:
+    get:
+      summary: Получение информации о счете
+      description: Возвращает детальную информацию о счете по его ID
+      operationId: getInvoiceById
+      tags:
+        - Бухгалтерия
+      parameters:
+        - name: invoiceId
+          in: path
+          description: Идентификатор счета
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Успешный ответ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Invoice'
+        '401':
+          description: Unauthorized
+        '404':
+          description: Счет не найден
+        '500':
+          description: Internal Server Error
+    put:
+      summary: Обновление информации о счете
+      description: Обновляет данные о счете (например, статус, сумму)
+      operationId: updateInvoice
+      tags:
+        - Бухгалтерия
+      parameters:
+        - name: invoiceId
+          in: path
+          description: Идентификатор счета
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateInvoiceRequest'
+      responses:
+        '200':
+          description: Счет успешно обновлен
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Invoice'
+        '400':
+          description: Неверные данные в запросе
+        '401':
+          description: Unauthorized
+        '404':
+          description: Счет не найден
+        '500':
+          description: Internal Server Error
+    delete:
+      summary: Удаление счета
+      description: Бухгалтер может удалить счет
+      operationId: deleteInvoice
+      tags:
+        - Бухгалтерия
+      parameters:
+        - name: invoiceId
+          in: path
+          description: Идентификатор счета
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Счет успешно удален
+        '401':
+          description: Unauthorized
+        '404':
+          description: Счет не найден
+        '500':
+          description: Internal Server Error
+  /taxes:
+    get:
+      summary: Получение информации о налогах
+      description: Возвращает текущие налоговые ставки и правила
+      operationId: getTaxInfo
+      tags:
+        - Бухгалтерия
+      responses:
+        '200':
+          description: Успешный ответ
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TaxRule'
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal Server Error
+    post:
+      summary: Расчет налогов
+      description: Бухгалтер может рассчитать налоги по заданным параметрам
+      operationId: calculateTaxes
+      tags:
+        - Бухгалтерия
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CalculateTaxesRequest'
+      responses:
+        '200':
+          description: Налоги успешно рассчитаны
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaxCalculationResult'
+        '400':
+          description: Неверные данные в запросе
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal Server Error
+  /reports:
+    post:
+      summary: Генерация финансового отчета
+      description: Бухгалтер может сгенерировать финансовый отчет за указанный период
+      operationId: generateReport
+      tags:
+        - Бухгалтерия
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GenerateReportRequest'
+      responses:
+        '200':
+          description: Отчет успешно сгенерирован
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FinancialReport'
+        '400':
+          description: Неверные данные в запросе
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal Server Error
+components:
+  schemas:
+    Employee:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: Уникальный идентификатор сотрудника
+        name:
+          type: string
+          description: Имя сотрудника
+        surname:
+          type: string
+          description: Фамилия сотрудника
+        positionId:
+          type: integer
+          description: Идентификатор должности
+        department:
+          type: string
+          description: Отдел, в котором работает сотрудник
+        startDate:
+          type: string
+          format: date
+          description: Дата начала работы
+        endDate:
+          type: string
+          format: date
+          description: Дата увольнения (если есть)
+    CreateEmployeeRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          description: Имя сотрудника
+        surname:
+          type: string
+          description: Фамилия сотрудника
+        positionId:
+          type: integer
+          description: Идентификатор должности
+        department:
+          type: string
+          description: Отдел, в котором работает сотрудник
+        startDate:
+          type: string
+          format: date
+          description: Дата начала работы
+    UpdateEmployeeRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          description: Новое имя сотрудника
+        surname:
+          type: string
+          description: Новая фамилия сотрудника
+        positionId:
+          type: integer
+          description: Новый идентификатор должности
+        department:
+          type: string
+          description: Новый отдел
+        endDate:
+          type: string
+          format: date
+          description: Дата увольнения
+    Position:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: Уникальный идентификатор должности
+        name:
+          type: string
+          description: Название должности
+        salaryMin:
+          type: number
+          format: float
+          description: Минимальная зарплата
+        salaryMax:
+          type: number
+          format: float
+          description: Максимальная зарплата
+        responsibilities:
+          type: array
+          items:
+            type: string
+          description: Обязанности должности
+    CreatePositionRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          description: Название должности
+        salaryMin:
+          type: number
+          format: float
+          description: Минимальная зарплата
+        salaryMax:
+          type: number
+          format: float
+          description: Максимальная зарплата
+        responsibilities:
+          type: array
+          items:
+            type: string
+          description: Обязанности должности
+    UpdatePositionRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          description: Новое название должности
+        salaryMin:
+          type: number
+          format: float
+          description: Новая минимальная зарплата
+        salaryMax:
+          type: number
+          format: float
+          description: Новая максимальная зарплата
+        responsibilities:
+          type: array
+          items:
+            type: string
+          description: Обновленные обязанности должности
+    PayrollResult:
+      type: object
+      properties:
+        month:
+          type: string
+          format: date
+          description: Месяц расчета
+        totalAmount:
+          type: number
+          format: float
+          description: Общая сумма к выплате
+        details:
+          type: array
+          items:
+            type: object
+            properties:
+              employeeId:
+                type: integer
+                description: Идентификатор сотрудника
+              amount:
+                type: number
+                format: float
+                description: Сумма к выплате
+          description: Детали выплат по сотрудникам
+    CalculatePayrollRequest:
+      type: object
+      properties:
+        month:
+          type: string
+          format: date
+          description: Месяц расчета
+        bonus:
+          type: number
+          format: float
+          description: Бонус к зарплате
+    Invoice:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: Уникальный идентификатор счета
+        clientId:
+          type: integer
+          description: Идентификатор клиента
+        amount:
+          type: number
+          format: float
+          description: Сумма счета
+        dueDate:
+          type: string
+          format: date
+          description: Дата оплаты
+        status:
+          type: string
+          description: Статус счета ('ожидает', 'оплачен', 'отменён')
+    CreateInvoiceRequest:
+      type: object
+      properties:
+        clientId:
+          type: integer
+          description: Идентификатор клиента
+        amount:
+          type: number
+          format: float
+          description: Сумма счета
+        dueDate:
+          type: string
+          format: date
+          description: Дата оплаты
+    UpdateInvoiceRequest:
+      type: object
+      properties:
+        amount:
+          type: number
+          format: float
+          description: Новая сумма счета
+        dueDate:
+          type: string
+          format: date
+          description: Новая дата оплаты
+        status:
+          type: string
+          description: Новый статус счета
+    TaxRule:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: Уникальный идентификатор налогового правила
+        name:
+          type: string
+          description: Название налога
+        rate:
+          type: number
+          format: float
+          description: Ставка налога
+        description:
+          type: string
+          description: Описание налога
+    CalculateTaxesRequest:
+      type: object
+      properties:
+        amount:
+          type: number
+          format: float
+          description: Сумма для расчета налогов
+        taxIds:
+          type: array
+          items:
+            type: integer
+          description: Идентификаторы налогов для расчета
+    TaxCalculationResult:
+      type: object
+      properties:
+        totalTax:
+          type: number
+          format: float
+          description: Общая сумма налогов
+        details:
+          type: array
+          items:
+            type: object
+            properties:
+              taxId:
+                type: integer
+                description: Идентификатор налога
+              amount:
+                type: number
+                format: float
+                description: Сумма налога
+          description: Детали расчета налогов
+    GenerateReportRequest:
+      type: object
+      properties:
+        startDate:
+          type: string
+          format: date
+          description: Дата начала периода
+        endDate:
+          type: string
+          format: date
+          description: Дата окончания периода
+        type:
+          type: string
+          description: Тип отчета ('ежемесячный', 'ежеквартальный', 'годовой')
+    FinancialReport:
+      type: object
+      properties:
+        period:
+          type: object
+          properties:
+            startDate:
+              type: string
+              format: date
+              description: Дата начала периода
+            endDate:
+              type: string
+              format: date
+              description: Дата окончания периода
+          description: Период отчета
+        income:
+          type: number
+          format: float
+          description: Общий доход
+        expenses:
+          type: number
+          format: float
+          description: Общие расходы
+        profit:
+          type: number
+          format: float
+          description: Чистая прибыль
+        details:
+          type: object
+          properties:
+            rent:
+              type: number
+              format: float
+              description: Доход от аренды
+            services:
+              type: number
+              format: float
+              description: Доход от услуг
+            salaries:
+              type: number
+              format: float
+              description: Расходы на зарплаты
+            utilities:
+              type: number
+              format: float
+              description: Коммунальные платежи
+          description: Детали доходов и расходов

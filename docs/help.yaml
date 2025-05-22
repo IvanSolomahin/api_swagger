@@ -1,0 +1,416 @@
+openapi: 3.0.0
+info:
+  title: Микросервис Поддержки Коворкинга
+  version: 1.0.0
+  description: API для обработки жалоб, запросов и взаимодействия со службой поддержки
+servers:
+  - url: 'https://coworking-api.example.com/support '
+paths:
+  /tickets:
+    get:
+      summary: Получение списка тикетов
+      description: Возвращает список всех тикетов с фильтрацией по статусу и пользователю
+      operationId: getTickets
+      tags:
+        - Поддержка
+      parameters:
+        - name: userId
+          in: query
+          description: Фильтр по идентификатору пользователя
+          schema:
+            type: integer
+        - name: status
+          in: query
+          description: Фильтр по статусу тикета
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Успешный ответ
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Ticket'
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal Server Error
+    post:
+      summary: Создание нового тикета
+      description: Пользователь может создать новый тикет для службы поддержки
+      operationId: createTicket
+      tags:
+        - Поддержка
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateTicketRequest'
+      responses:
+        '201':
+          description: Тикет успешно создан
+          headers:
+            Location:
+              description: URI нового ресурса
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Ticket'
+        '400':
+          description: Неверные данные в запросе
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal Server Error
+  /tickets/{ticketId}:
+    get:
+      summary: Получение информации о тикете
+      description: Возвращает детальную информацию о тикете по его ID
+      operationId: getTicketById
+      tags:
+        - Поддержка
+      parameters:
+        - name: ticketId
+          in: path
+          description: Идентификатор тикета
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Успешный ответ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Ticket'
+        '401':
+          description: Unauthorized
+        '404':
+          description: Тикет не найден
+        '500':
+          description: Internal Server Error
+    put:
+      summary: Обновление статуса тикета
+      description: Администратор может изменить статус тикета (например, 'в процессе', 'закрыт')
+      operationId: updateTicketStatus
+      tags:
+        - Поддержка
+      parameters:
+        - name: ticketId
+          in: path
+          description: Идентификатор тикета
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateTicketStatusRequest'
+      responses:
+        '200':
+          description: Статус тикета успешно обновлён
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Ticket'
+        '400':
+          description: Неверные данные в запросе
+        '401':
+          description: Unauthorized
+        '404':
+          description: Тикет не найден
+        '500':
+          description: Internal Server Error
+    delete:
+      summary: Удаление тикета
+      description: Администратор может удалить тикет
+      operationId: deleteTicket
+      tags:
+        - Поддержка
+      parameters:
+        - name: ticketId
+          in: path
+          description: Идентификатор тикета
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Тикет успешно удалён
+        '401':
+          description: Unauthorized
+        '404':
+          description: Тикет не найден
+        '500':
+          description: Internal Server Error
+  /tickets/{ticketId}/comments:
+    post:
+      summary: Добавление комментария к тикету
+      description: Пользователь или администратор может добавить комментарий к тикету
+      operationId: addCommentToTicket
+      tags:
+        - Комментарии
+      parameters:
+        - name: ticketId
+          in: path
+          description: Идентификатор тикета
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AddCommentRequest'
+      responses:
+        '201':
+          description: Комментарий успешно добавлен
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Comment'
+        '400':
+          description: Неверные данные в запросе
+        '401':
+          description: Unauthorized
+        '404':
+          description: Тикет не найден
+        '500':
+          description: Internal Server Error
+  /categories:
+    get:
+      summary: Получение списка категорий проблем
+      description: Возвращает список всех доступных категорий для тикетов
+      operationId: getCategories
+      tags:
+        - Категории
+      responses:
+        '200':
+          description: Успешный ответ
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Category'
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal Server Error
+    post:
+      summary: Создание новой категории
+      description: Администратор может добавить новую категорию проблем
+      operationId: createCategory
+      tags:
+        - Категории
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateCategoryRequest'
+      responses:
+        '201':
+          description: Категория успешно создана
+          headers:
+            Location:
+              description: URI нового ресурса
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Category'
+        '400':
+          description: Неверные данные в запросе
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal Server Error
+  /reports:
+    post:
+      summary: Генерация отчета по тикетам
+      description: Администратор может сгенерировать отчет по количеству и статусам тикетов за период
+      operationId: generateSupportReport
+      tags:
+        - Отчеты
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GenerateSupportReportRequest'
+      responses:
+        '200':
+          description: Отчет успешно сгенерирован
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SupportReport'
+        '400':
+          description: Неверные данные в запросе
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal Server Error
+components:
+  schemas:
+    Ticket:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: Уникальный идентификатор тикета
+        userId:
+          type: integer
+          description: Идентификатор пользователя
+        categoryId:
+          type: integer
+          description: Идентификатор категории
+        title:
+          type: string
+          description: Заголовок тикета
+        description:
+          type: string
+          description: Описание проблемы
+        status:
+          type: string
+          description: Статус тикета ('ожидает', 'в процессе', 'закрыт')
+        attachments:
+          type: array
+          items:
+            type: string
+          description: Список приложенных файлов
+        createdAt:
+          type: string
+          format: date-time
+          description: Дата создания тикета
+        updatedAt:
+          type: string
+          format: date-time
+          description: Дата последнего обновления
+    CreateTicketRequest:
+      type: object
+      properties:
+        userId:
+          type: integer
+          description: Идентификатор пользователя
+        categoryId:
+          type: integer
+          description: Идентификатор категории
+        title:
+          type: string
+          description: Заголовок тикета
+        description:
+          type: string
+          description: Описание проблемы
+        attachments:
+          type: array
+          items:
+            type: string
+          description: Список приложенных файлов
+    UpdateTicketStatusRequest:
+      type: object
+      properties:
+        status:
+          type: string
+          description: Новый статус тикета
+    Comment:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: Уникальный идентификатор комментария
+        ticketId:
+          type: integer
+          description: Идентификатор тикета
+        authorId:
+          type: integer
+          description: Идентификатор автора
+        text:
+          type: string
+          description: Текст комментария
+        createdAt:
+          type: string
+          format: date-time
+          description: Дата создания комментария
+    AddCommentRequest:
+      type: object
+      properties:
+        authorId:
+          type: integer
+          description: Идентификатор автора
+        text:
+          type: string
+          description: Текст комментария
+    Category:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: Уникальный идентификатор категории
+        name:
+          type: string
+          description: Название категории
+        description:
+          type: string
+          description: Описание категории
+    CreateCategoryRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          description: Название категории
+        description:
+          type: string
+          description: Описание категории
+    SupportReport:
+      type: object
+      properties:
+        period:
+          type: object
+          properties:
+            startDate:
+              type: string
+              format: date
+              description: Дата начала периода
+            endDate:
+              type: string
+              format: date
+              description: Дата окончания периода
+          description: Период отчета
+        totalTickets:
+          type: integer
+          description: Общее количество тикетов
+        resolvedTickets:
+          type: integer
+          description: Количество решённых тикетов
+        averageResolutionTime:
+          type: string
+          description: Среднее время решения (в часах)
+        categoryDistribution:
+          type: object
+          properties:
+            type: object
+            additionalProperties:
+              type: integer
+            description: Распределение по категориям
+    GenerateSupportReportRequest:
+      type: object
+      properties:
+        startDate:
+          type: string
+          format: date
+          description: Дата начала периода
+        endDate:
+          type: string
+          format: date
+          description: Дата окончания периода
