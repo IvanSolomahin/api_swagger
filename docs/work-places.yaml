@@ -1,0 +1,221 @@
+openapi: 3.0.0
+info:
+  title: Микросервис Рабочих мест Коворкинга
+  version: 1.0.0
+  description: API для управления рабочими местами в коворкинге
+servers:
+  - url: https://coworking-api.example.com/workspaces 
+paths:
+  /workspaces:
+    get:
+      summary: Получение списка доступных рабочих мест
+      description: Возвращает список всех доступных рабочих мест с их состоянием
+      operationId: getWorkspaces
+      tags:
+        - Рабочие места
+      responses:
+        '200':
+          description: Успешный ответ
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Workspace'
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal Server Error
+    post:
+      summary: Создание нового рабочего места
+      description: Администратор может создать новое рабочее место
+      operationId: createWorkspace
+      tags:
+        - Рабочие места
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateWorkspaceRequest'
+      responses:
+        '201':
+          description: Рабочее место успешно создано
+          headers:
+            Location:
+              description: URI нового ресурса
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Workspace'
+        '400':
+          description: Неверные данные в запросе
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal Server Error
+  /workspaces/{workspaceId}:
+    get:
+      summary: Получение информации о конкретном рабочем месте
+      description: Возвращает детальную информацию о рабочем месте по его ID
+      operationId: getWorkspaceById
+      tags:
+        - Рабочие места
+      parameters:
+        - name: workspaceId
+          in: path
+          description: Идентификатор рабочего места
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Успешный ответ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Workspace'
+        '401':
+          description: Unauthorized
+        '404':
+          description: Рабочее место не найдено
+        '500':
+          description: Internal Server Error
+    put:
+      summary: Обновление информации о рабочем месте
+      description: Обновляет данные о рабочем месте (например, состояние, расположение)
+      operationId: updateWorkspace
+      tags:
+        - Рабочие места
+      parameters:
+        - name: workspaceId
+          in: path
+          description: Идентификатор рабочего места
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateWorkspaceRequest'
+      responses:
+        '200':
+          description: Рабочее место успешно обновлено
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Workspace'
+        '400':
+          description: Неверные данные в запросе
+        '401':
+          description: Unauthorized
+        '404':
+          description: Рабочее место не найдено
+        '500':
+          description: Internal Server Error
+    delete:
+      summary: Удаление рабочего места
+      description: Администратор может удалить рабочее место
+      operationId: deleteWorkspace
+      tags:
+        - Рабочие места
+      parameters:
+        - name: workspaceId
+          in: path
+          description: Идентификатор рабочего места
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Рабочее место успешно удалено
+        '401':
+          description: Unauthorized
+        '404':
+          description: Рабочее место не найдено
+        '500':
+          description: Internal Server Error
+components:
+  schemas:
+    Workspace:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: Уникальный идентификатор рабочего места
+        name:
+          type: string
+          description: Название рабочего места
+        location:
+          type: string
+          description: Расположение рабочего места (этаж, секция)
+        status:
+          type: string
+          description: Статус рабочего места (свободно, занято, обслуживание)
+        capacity:
+          type: integer
+          description: Количество мест в рабочем пространстве
+        price:
+          type: number
+          format: float
+          description: Цена за использование рабочего места
+        features:
+          type: array
+          items:
+            type: string
+          description: Особенности рабочего места (Wi-Fi, принтер, кофе)
+        availability:
+          type: boolean
+          description: Доступность для бронирования
+    CreateWorkspaceRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          description: Название рабочего места
+        location:
+          type: string
+          description: Расположение рабочего места
+        status:
+          type: string
+          description: Статус рабочего места
+        capacity:
+          type: integer
+          description: Количество мест в рабочем пространстве
+        price:
+          type: number
+          format: float
+          description: Цена за использование рабочего места
+        features:
+          type: array
+          items:
+            type: string
+          description: Особенности рабочего места
+    UpdateWorkspaceRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          description: Новое название рабочего места
+        location:
+          type: string
+          description: Новое расположение рабочего места
+        status:
+          type: string
+          description: Новый статус рабочего места
+        capacity:
+          type: integer
+          description: Новое количество мест в рабочем пространстве
+        price:
+          type: number
+          format: float
+          description: Новая цена за использование рабочего места
+        features:
+          type: array
+          items:
+            type: string
+          description: Обновленные особенности рабочего места
