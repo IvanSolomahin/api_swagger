@@ -5,12 +5,12 @@ info:
   description: API для управления сетью коворкингов
 
 servers:
-  - url: https://api.coworking.com/v1
+  - url: https://api.coworking.com/v1   
     description: Production server
 
 tags:
   - name: Authentication
-    description: Регистрация и авторизация
+    description: Регистрация, авторизация и проверка токена
   - name: CoworkingSpaces
     description: Управление коворкингами
   - name: Inventory
@@ -72,6 +72,24 @@ components:
           type: string
           enum: [desk, meeting_room, lounge]
 
+    TokenResponse:
+      type: object
+      properties:
+        accessToken:
+          type: string
+          description: "JWT токен"
+        refreshToken:
+          type: string
+          description: "Refresh токен"
+
+    VerifyResponse:
+      type: object
+      properties:
+        valid:
+          type: boolean
+        user:
+          $ref: '#/components/schemas/User'
+
 paths:
   /auth/register:
     post:
@@ -90,6 +108,43 @@ paths:
       responses:
         '201':
           description: User created
+
+  /auth/token:
+    post:
+      tags: [Authentication]
+      summary: Получить JWT токен
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                password:
+                  type: string
+      responses:
+        '200':
+          description: Успешный ответ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenResponse'
+
+  /auth/verify:
+    get:
+      tags: [Authentication]
+      summary: Проверить токен
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Токен действителен
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VerifyResponse'
 
   /coworking-spaces:
     post:
