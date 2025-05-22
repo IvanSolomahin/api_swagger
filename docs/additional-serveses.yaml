@@ -1,0 +1,413 @@
+openapi: 3.0.0
+info:
+  title: Микросервис Дополнительных Услуг Коворкинга
+  version: 1.0.0
+  description: API для управления дополнительными услугами в коворкинге
+servers:
+  - url: 'https://coworking-api.example.com/additional-services '
+paths:
+  /services:
+    get:
+      summary: Получение списка доступных услуг
+      description: Возвращает список всех доступных дополнительных услуг
+      operationId: getServices
+      tags:
+        - Дополнительные услуги
+      responses:
+        '200':
+          description: Успешный ответ
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Service'
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal Server Error
+    post:
+      summary: Создание новой услуги
+      description: Администратор может создать новую дополнительную услугу
+      operationId: createService
+      tags:
+        - Дополнительные услуги
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateServiceRequest'
+      responses:
+        '201':
+          description: Услуга успешно создана
+          headers:
+            Location:
+              description: URI нового ресурса
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Service'
+        '400':
+          description: Неверные данные в запросе
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal Server Error
+  /services/{serviceId}:
+    get:
+      summary: Получение информации о конкретной услуге
+      description: Возвращает детальную информацию об услуге по её ID
+      operationId: getServiceById
+      tags:
+        - Дополнительные услуги
+      parameters:
+        - name: serviceId
+          in: path
+          description: Идентификатор услуги
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Успешный ответ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Service'
+        '401':
+          description: Unauthorized
+        '404':
+          description: Услуга не найдена
+        '500':
+          description: Internal Server Error
+    put:
+      summary: Обновление информации об услуге
+      description: Обновляет данные о дополнительной услуге (например, название, цену)
+      operationId: updateService
+      tags:
+        - Дополнительные услуги
+      parameters:
+        - name: serviceId
+          in: path
+          description: Идентификатор услуги
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateServiceRequest'
+      responses:
+        '200':
+          description: Услуга успешно обновлена
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Service'
+        '400':
+          description: Неверные данные в запросе
+        '401':
+          description: Unauthorized
+        '404':
+          description: Услуга не найдена
+        '500':
+          description: Internal Server Error
+    delete:
+      summary: Удаление услуги
+      description: Администратор может удалить дополнительную услугу
+      operationId: deleteService
+      tags:
+        - Дополнительные услуги
+      parameters:
+        - name: serviceId
+          in: path
+          description: Идентификатор услуги
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Услуга успешно удалена
+        '401':
+          description: Unauthorized
+        '404':
+          description: Услуга не найдена
+        '500':
+          description: Internal Server Error
+  /orders:
+    post:
+      summary: Создание заказа на услугу
+      description: Пользователь может заказать дополнительную услугу
+      operationId: createOrder
+      tags:
+        - Заказы услуг
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateOrderRequest'
+      responses:
+        '201':
+          description: Заказ успешно создан
+          headers:
+            Location:
+              description: URI нового ресурса
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Order'
+        '400':
+          description: Неверные данные в запросе
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal Server Error
+  /orders/{orderId}:
+    get:
+      summary: Получение информации о заказе
+      description: Возвращает детальную информацию о заказе по его ID
+      operationId: getOrderById
+      tags:
+        - Заказы услуг
+      parameters:
+        - name: orderId
+          in: path
+          description: Идентификатор заказа
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Успешный ответ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Order'
+        '401':
+          description: Unauthorized
+        '404':
+          description: Заказ не найден
+        '500':
+          description: Internal Server Error
+    put:
+      summary: Обновление статуса заказа
+      description: Администратор может изменить статус заказа (например, 'выполнен', 'отменён')
+      operationId: updateOrderStatus
+      tags:
+        - Заказы услуг
+      parameters:
+        - name: orderId
+          in: path
+          description: Идентификатор заказа
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateOrderStatusRequest'
+      responses:
+        '200':
+          description: Статус заказа успешно обновлён
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Order'
+        '400':
+          description: Неверные данные в запросе
+        '401':
+          description: Unauthorized
+        '404':
+          description: Заказ не найден
+        '500':
+          description: Internal Server Error
+    delete:
+      summary: Удаление заказа
+      description: Администратор может удалить заказ
+      operationId: deleteOrder
+      tags:
+        - Заказы услуг
+      parameters:
+        - name: orderId
+          in: path
+          description: Идентификатор заказа
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Заказ успешно удалён
+        '401':
+          description: Unauthorized
+        '404':
+          description: Заказ не найден
+        '500':
+          description: Internal Server Error
+  /payments:
+    post:
+      summary: Оплата заказа
+      description: Пользователь может оплатить заказ на дополнительную услугу
+      operationId: payOrder
+      tags:
+        - Платежи
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PayOrderRequest'
+      responses:
+        '200':
+          description: Платёж успешно обработан
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Payment'
+        '400':
+          description: Неверные данные в запросе
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal Server Error
+components:
+  schemas:
+    Service:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: Уникальный идентификатор услуги
+        name:
+          type: string
+          description: Название услуги
+        description:
+          type: string
+          description: Описание услуги
+        price:
+          type: number
+          format: float
+          description: Цена услуги
+        duration:
+          type: string
+          description: Длительность услуги (например, '1 час')
+        availability:
+          type: boolean
+          description: Доступность для заказа
+    CreateServiceRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          description: Название услуги
+        description:
+          type: string
+          description: Описание услуги
+        price:
+          type: number
+          format: float
+          description: Цена услуги
+        duration:
+          type: string
+          description: Длительность услуги
+        availability:
+          type: boolean
+          description: Доступность для заказа
+    UpdateServiceRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          description: Новое название услуги
+        description:
+          type: string
+          description: Новое описание услуги
+        price:
+          type: number
+          format: float
+          description: Новая цена услуги
+        duration:
+          type: string
+          description: Новая длительность услуги
+        availability:
+          type: boolean
+          description: Новая доступность для заказа
+    Order:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: Уникальный идентификатор заказа
+        userId:
+          type: integer
+          description: Идентификатор пользователя
+        serviceId:
+          type: integer
+          description: Идентификатор услуги
+        status:
+          type: string
+          description: Статус заказа ('ожидает', 'в процессе', 'выполнен', 'отменён')
+        paymentStatus:
+          type: string
+          description: Статус оплаты ('ожидает', 'оплачен', 'отменён')
+        details:
+          type: object
+          description: Детали заказа (например, дата, количество)
+    CreateOrderRequest:
+      type: object
+      properties:
+        userId:
+          type: integer
+          description: Идентификатор пользователя
+        serviceId:
+          type: integer
+          description: Идентификатор услуги
+        details:
+          type: object
+          description: Детали заказа
+    UpdateOrderStatusRequest:
+      type: object
+      properties:
+        status:
+          type: string
+          description: Новый статус заказа
+        paymentStatus:
+          type: string
+          description: Новый статус оплаты
+    PayOrderRequest:
+      type: object
+      properties:
+        orderId:
+          type: integer
+          description: Идентификатор заказа
+        paymentMethod:
+          type: string
+          description: Способ оплаты ('картой', 'наличными', 'бонусами')
+    Payment:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: Уникальный идентификатор платежа
+        orderId:
+          type: integer
+          description: Идентификатор заказа
+        amount:
+          type: number
+          format: float
+          description: Сумма платежа
+        method:
+          type: string
+          description: Способ оплаты
+        status:
+          type: string
+          description: Статус платежа ('успешно', 'отменён', 'в процессе')
