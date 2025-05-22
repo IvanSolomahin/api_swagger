@@ -94,7 +94,7 @@ paths:
  /auth/register:
    post:
      tags: [Authentication]
-     summary: Автоматическая регистрация
+     summary: регистрация
      requestBody:
        content:
          application/json:
