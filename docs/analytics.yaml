@@ -1,0 +1,185 @@
+openapi: 3.0.0
+info:
+  title: Аналитика коворкинга
+  version: 1.0.0
+  description: API для сбора и визуализации бизнес-метрик и метрик аптайма
+
+servers:
+  - url: http://analytics-service:8080
+    description: Локальный сервер
+
+paths:
+  /metrics:
+    get:
+      summary: Получение текущих метрик (Prometheus-формат)
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Метрики в формате Prometheus
+          content:
+            text/plain:
+              schema:
+                type: string
+        '401':
+          description: Нет доступа
+
+  /dashboards:
+    get:
+      summary: Получение списка дашбордов
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Список дашбордов
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Dashboard'
+        '401':
+          description: Нет доступа
+
+    post:
+      summary: Создание нового дашборда
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DashboardCreate'
+      responses:
+        '201':
+          description: Дашборд создан
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Dashboard'
+        '400':
+          description: Некорректные данные
+
+  /dashboards/{dashboardId}:
+    get:
+      summary: Получение дашборда по ID
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: dashboardId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Данные дашборда
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Dashboard'
+        '401':
+          description: Нет доступа
+        '404':
+          description: Дашборд не найден
+
+  /reports:
+    post:
+      summary: Генерация отчета по метрикам
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReportRequest'
+      responses:
+        '200':
+          description: Готовый отчет
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReportResponse'
+        '400':
+          description: Некорректные параметры
+
+components:
+  schemas:
+    Dashboard:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        panels:
+          type: array
+          items:
+            $ref: '#/components/schemas/Panel'
+        createdAt:
+          type: string
+          format: date-time
+
+    DashboardCreate:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        panels:
+          type: array
+          items:
+            $ref: '#/components/schemas/Panel'
+
+    Panel:
+      type: object
+      properties:
+        title:
+          type: string
+        type:
+          type: string
+          enum: ['graph', 'stat', 'table']
+        datasource:
+          type: string
+          example: "prometheus"
+        query:
+          type: string
+
+    ReportRequest:
+      type: object
+      properties:
+        metrics:
+          type: array
+          items:
+            type: string
+        timeRange:
+          type: object
+          properties:
+            from:
+              type: string
+              format: date-time
+            to:
+              type: string
+              format: date-time
+
+    ReportResponse:
+      type: object
+      properties:
+        reportId:
+          type: string
+        url:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
