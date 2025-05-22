@@ -4,6 +4,7 @@ entity Client {
   Name               : TEXT
   Phone_Number       : TEXT
   Email              : TEXT
+  Password           : CUSTOM TYPE
   Offline            : BOOLEAN
   Workspace_ID       : INT NOT NULL
   Instruments_ID     : INT[] NOT NULL
