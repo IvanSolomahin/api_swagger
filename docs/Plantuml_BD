@@ -1,0 +1,142 @@
+@startuml
+
+entity Client {
+  Name               : TEXT
+  Phone_Number       : TEXT
+  Email              : TEXT
+  Offline            : BOOLEAN
+  Workspace_ID       : INT NOT NULL
+  Instruments_ID     : INT[] NOT NULL
+  Parking_Space_ID   : INT NOT NULL
+  Bank_account       : CUSTOM TYPE
+  Request_ID         : INT NOT NULL
+  Time_token         : TEXT
+  --
+  + create_request()
+  + receive_order()
+  + payment()
+}
+
+entity workspace {
+  description        : TEXT
+  ID                 : SERIAL
+  Room_ID            : INT NOT NULL
+  Instruments_ID     : INT[]
+  Costs              : NUMERIC(10,2)
+  --
+  + receive_order()
+}
+
+entity Room {
+  description        : TEXT
+  ID                 : SERIAL
+  Speakers_ID        : INT[]
+  Cameras_ID         : INT[]
+  Workspaces_ID      : INT[]
+  --
+  + receive_order()
+}
+
+entity Speaker {
+  description        : TEXT
+  ID                 : SERIAL
+  Message            : TEXT
+  --
+  + receive_order()
+}
+
+entity Camera {
+  description        : TEXT
+  ID                 : SERIAL
+  Control_text       : TEXT
+  --
+  + receive_order()
+}
+
+entity Parking {
+  description        : TEXT
+  Parking_Spaces_ID  : INT[]
+  Costs              : INT
+  --
+  + receive_order()
+}
+
+entity Request {
+  message            : TEXT
+  ID                 : SERIAL
+  Text               : TEXT
+  payment_status     : BOOLEAN
+}
+
+entity Admin {
+  Name               : TEXT
+  Phone_Number       : TEXT
+  Email              : TEXT
+  Offline            : BOOLEAN
+  Workspace_ID       : INT NOT NULL
+  Instruments_ID     : INT[] NOT NULL
+  Parking_Space_ID   : INT NOT NULL
+  Bank_account       : CUSTOM TYPE
+}
+
+entity Order_reciever {
+  Name               : TEXT
+  ID                 : SERIAL
+  order_text         : TEXT
+  Staff_needed       : BOOLEAN
+  What_to_change     : CUSTOM TYPE
+  ID_to_change       : INT
+}
+
+entity Order_manager {
+  mesage             : TEXT
+  ID                 : SERIAL
+  What_to_change     : CUSTOM TYPE
+  ID_to_change       : INT
+}
+
+entity Staff {
+  Name               : TEXT
+  ID                 : SERIAL
+  order_text         : TEXT
+}
+
+entity Instrument {
+  description        : TEXT
+  ID                 : INT
+  Costs              : INT
+  --
+  + receive_order()
+}
+
+entity To_bank {
+  description        : TEXT
+  Bank_account       : CUSTOM TYPE
+  --
+  + payment_status
+}
+
+' Связи (foreign keys)
+Client           ||--|| workspace       : Workspace_ID  
+Client           ||--|| Parking         : Parking_Space_ID  
+Client           ||--|{ Request         : Request_ID  
+Client           ||--|{ To_bank         : Bank_account
+Client           ||--|{ Instrument      : Instrument_ID  
+Client           }|--|| Order_manager   : change_smth
+To_bank          ||--|| Request         : payment_status
+Request          ||--|| Admin           : receive_request
+Admin            ||--|{ Order_reciever  : create_order
+Order_reciever   ||--|| Staff           : send_order
+Order_reciever   ||--|| Order_manager   : send_order
+Order_manager    ||--|{ Workspace       : change_smth
+Order_manager    ||--|{ Parking         : change_smth
+Order_manager    ||--|{ Instrument      : change_smth
+Order_manager    ||--|{ Room            : change_smth
+Order_manager    ||--|{ Speaker         : change_smth
+Order_manager    ||--|{ Camera          : change_smth
+workspace        }|--|| Room            : Room_ID 
+Room             ||--|{ Speaker         : Speakers_ID  
+Room             ||--|{ Camera          : Cameras_ID  
+Room             ||--|{ workspace       : Workspaces_ID  
+
+@enduml
