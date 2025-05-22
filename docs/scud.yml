@@ -1,0 +1,272 @@
+openapi: 3.0.0
+info:
+  title: СКУД коворкинга
+  version: 1.0.0
+  description: API для управления контролем доступа, видеонаблюдением и событиями безопасности
+
+servers:
+  - url: http://sucd-service:8080
+    description: Локальный сервер
+
+security:
+  - BearerAuth: []
+
+paths:
+  /access:
+    post:
+      summary: Запрос на открытие двери/турникета
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AccessRequest'
+      responses:
+        '200':
+          description: Доступ разрешен
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccessResponse'
+        '401':
+          description: Нет доступа
+        '403':
+          description: Недостаточно прав
+        '404':
+          description: Устройство не найдено
+
+  /cameras/{cameraId}/stream:
+    get:
+      summary: Получение видеопотока с камеры
+      parameters:
+        - name: cameraId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Поток с камеры
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+        '401':
+          description: Нет доступа
+        '404':
+          description: Камера не найдена
+
+  /access-control:
+    post:
+      summary: Создание правила доступа
+      security:
+        - BearerAuth: []
+        - RoleCheck: [ADMIN]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AccessRuleCreate'
+      responses:
+        '201':
+          description: Правило создано
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccessRule'
+        '400':
+          description: Некорректные данные
+        '401':
+          description: Нет доступа
+        '403':
+          description: Недостаточно прав
+
+  /security-events:
+    get:
+      summary: Получение логов событий безопасности
+      security:
+        - BearerAuth: []
+        - RoleCheck: [ADMIN]
+      responses:
+        '200':
+          description: Список событий
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/SecurityEvent'
+        '401':
+          description: Нет доступа
+        '403':
+          description: Недостаточно прав
+
+  /webhook/sensor:
+    post:
+      summary: Вебхук для уведомлений от датчиков (например, несанкционированный доступ)
+      security: [] # Без JWT, так как вызывается извне
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SensorWebhookPayload'
+      responses:
+        '200':
+          description: Уведомление обработано
+        '400':
+          description: Некорректные данные
+
+  /admin/devices:
+    get:
+      summary: Получение списка устройств СКУД
+      security:
+        - BearerAuth: []
+        - RoleCheck: [ADMIN]
+      responses:
+        '200':
+          description: Список устройств
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/DeviceStatus'
+        '401':
+          description: Нет доступа
+        '403':
+          description: Недостаточно прав
+
+components:
+  schemas:
+    AccessRequest:
+      type: object
+      properties:
+        userId:
+          type: string
+        deviceId:
+          type: string
+        accessType:
+          type: string
+          enum: ['RFID', 'FACE_RECOGNITION', 'PIN_CODE']
+      required: [userId, deviceId]
+
+    AccessResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: ['ALLOWED', 'DENIED', 'TEMPORARY_ACCESS']
+        message:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+
+    AccessRuleCreate:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        schedule:
+          type: object
+          properties:
+            startTime:
+              type: string
+              format: date-time
+            endTime:
+              type: string
+              format: date-time
+        users:
+          type: array
+          items:
+            type: string
+        devices:
+          type: array
+          items:
+            type: string
+
+    AccessRule:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        schedule:
+          type: object
+          properties:
+            startTime:
+              type: string
+              format: date-time
+            endTime:
+              type: string
+              format: date-time
+        users:
+          type: array
+          items:
+            type: string
+        devices:
+          type: array
+          items:
+            type: string
+
+    SecurityEvent:
+      type: object
+      properties:
+        id:
+          type: string
+        eventType:
+          type: string
+          enum: ['UNAUTHORIZED_ACCESS', 'DEVICE_FAILURE', 'ALARM_TRIGGERED']
+        description:
+          type: string
+        deviceId:
+          type: string
+        userId:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+
+    SensorWebhookPayload:
+      type: object
+      properties:
+        sensorId:
+          type: string
+        eventType:
+          type: string
+          enum: ['DOOR_OPENED', 'UNAUTHORIZED_ACCESS', 'FIRE_ALARM']
+        message:
+          type: string
+
+    DeviceStatus:
+      type: object
+      properties:
+        id:
+          type: string
+        type:
+          type: string
+          enum: ['DOOR_CONTROLLER', 'CAMERA', 'TURNTABLE']
+        status:
+          type: string
+          enum: ['ONLINE', 'OFFLINE', 'MAINTENANCE']
+        lastHeartbeat:
+          type: string
+          format: date-time
+
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+    RoleCheck:
+      type: apiKey
+      in: header
+      name: X-User-Role
