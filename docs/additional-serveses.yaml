@@ -5,6 +5,18 @@ info:
   description: API для управления дополнительными услугами в коворкинге
 servers:
   - url: 'https://coworking-api.example.com/additional-services '
+security:
+  - BearerAuth: []
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+    RoleCheck:
+      type: apiKey
+      in: header
+      name: X-User-Role
 paths:
   /services:
     get:
@@ -13,6 +25,8 @@ paths:
       operationId: getServices
       tags:
         - Дополнительные услуги
+      security:
+        - BearerAuth: []
       responses:
         '200':
           description: Успешный ответ
@@ -32,6 +46,9 @@ paths:
       operationId: createService
       tags:
         - Дополнительные услуги
+      security:
+        - BearerAuth: []
+        - RoleCheck: [ADMIN]
       requestBody:
         required: true
         content:
@@ -43,7 +60,6 @@ paths:
           description: Услуга успешно создана
           headers:
             Location:
-              description: URI нового ресурса
               schema:
                 type: string
           content:
@@ -54,6 +70,8 @@ paths:
           description: Неверные данные в запросе
         '401':
           description: Unauthorized
+        '403':
+          description: Недостаточно прав
         '500':
           description: Internal Server Error
   /services/{serviceId}:
@@ -63,6 +81,8 @@ paths:
       operationId: getServiceById
       tags:
         - Дополнительные услуги
+      security:
+        - BearerAuth: []
       parameters:
         - name: serviceId
           in: path
@@ -89,6 +109,9 @@ paths:
       operationId: updateService
       tags:
         - Дополнительные услуги
+      security:
+        - BearerAuth: []
+        - RoleCheck: [ADMIN]
       parameters:
         - name: serviceId
           in: path
@@ -113,6 +136,8 @@ paths:
           description: Неверные данные в запросе
         '401':
           description: Unauthorized
+        '403':
+          description: Недостаточно прав
         '404':
           description: Услуга не найдена
         '500':
@@ -123,6 +148,9 @@ paths:
       operationId: deleteService
       tags:
         - Дополнительные услуги
+      security:
+        - BearerAuth: []
+        - RoleCheck: [ADMIN]
       parameters:
         - name: serviceId
           in: path
@@ -135,6 +163,8 @@ paths:
           description: Услуга успешно удалена
         '401':
           description: Unauthorized
+        '403':
+          description: Недостаточно прав
         '404':
           description: Услуга не найдена
         '500':
@@ -146,6 +176,8 @@ paths:
       operationId: createOrder
       tags:
         - Заказы услуг
+      security:
+        - BearerAuth: []
       requestBody:
         required: true
         content:
@@ -157,7 +189,6 @@ paths:
           description: Заказ успешно создан
           headers:
             Location:
-              description: URI нового ресурса
               schema:
                 type: string
           content:
@@ -177,6 +208,8 @@ paths:
       operationId: getOrderById
       tags:
         - Заказы услуг
+      security:
+        - BearerAuth: []
       parameters:
         - name: orderId
           in: path
@@ -199,10 +232,13 @@ paths:
           description: Internal Server Error
     put:
       summary: Обновление статуса заказа
-      description: Администратор может изменить статус заказа (например, 'выполнен', 'отменён')
+      description: Администратор может изменить статус заказа
       operationId: updateOrderStatus
       tags:
         - Заказы услуг
+      security:
+        - BearerAuth: []
+        - RoleCheck: [ADMIN]
       parameters:
         - name: orderId
           in: path
@@ -227,6 +263,8 @@ paths:
           description: Неверные данные в запросе
         '401':
           description: Unauthorized
+        '403':
+          description: Недостаточно прав
         '404':
           description: Заказ не найден
         '500':
@@ -237,6 +275,9 @@ paths:
       operationId: deleteOrder
       tags:
         - Заказы услуг
+      security:
+        - BearerAuth: []
+        - RoleCheck: [ADMIN]
       parameters:
         - name: orderId
           in: path
@@ -249,6 +290,8 @@ paths:
           description: Заказ успешно удалён
         '401':
           description: Unauthorized
+        '403':
+          description: Недостаточно прав
         '404':
           description: Заказ не найден
         '500':
@@ -260,6 +303,8 @@ paths:
       operationId: payOrder
       tags:
         - Платежи
+      security:
+        - BearerAuth: []
       requestBody:
         required: true
         content:
@@ -289,58 +334,45 @@ components:
           description: Уникальный идентификатор услуги
         name:
           type: string
-          description: Название услуги
         description:
           type: string
-          description: Описание услуги
         price:
           type: number
           format: float
-          description: Цена услуги
         duration:
           type: string
-          description: Длительность услуги (например, '1 час')
         availability:
           type: boolean
-          description: Доступность для заказа
     CreateServiceRequest:
       type: object
       properties:
         name:
           type: string
-          description: Название услуги
         description:
           type: string
-          description: Описание услуги
         price:
           type: number
           format: float
-          description: Цена услуги
         duration:
           type: string
-          description: Длительность услуги
         availability:
           type: boolean
-          description: Доступность для заказа
+      required: [name, price, duration, availability]
     UpdateServiceRequest:
       type: object
       properties:
         name:
           type: string
-          description: Новое название услуги
         description:
           type: string
-          description: Новое описание услуги
         price:
           type: number
           format: float
-          description: Новая цена услуги
         duration:
           type: string
-          description: Новая длительность услуги
         availability:
           type: boolean
-          description: Новая доступность для заказа
+      required: [name, description, price, duration, availability]
     Order:
       type: object
       properties:
@@ -355,59 +387,50 @@ components:
           description: Идентификатор услуги
         status:
           type: string
-          description: Статус заказа ('ожидает', 'в процессе', 'выполнен', 'отменён')
+          description: Статус заказа
         paymentStatus:
           type: string
-          description: Статус оплаты ('ожидает', 'оплачен', 'отменён')
+          description: Статус оплаты
         details:
           type: object
-          description: Детали заказа (например, дата, количество)
+          description: Детали заказа
     CreateOrderRequest:
       type: object
       properties:
         userId:
           type: integer
-          description: Идентификатор пользователя
         serviceId:
           type: integer
-          description: Идентификатор услуги
         details:
           type: object
-          description: Детали заказа
+      required: [userId, serviceId, details]
     UpdateOrderStatusRequest:
       type: object
       properties:
         status:
           type: string
-          description: Новый статус заказа
         paymentStatus:
           type: string
-          description: Новый статус оплаты
+      required: [status, paymentStatus]
     PayOrderRequest:
       type: object
       properties:
         orderId:
           type: integer
-          description: Идентификатор заказа
         paymentMethod:
           type: string
-          description: Способ оплаты ('картой', 'наличными', 'бонусами')
+        required: [orderId, paymentMethod]
     Payment:
       type: object
       properties:
         id:
           type: integer
-          description: Уникальный идентификатор платежа
         orderId:
           type: integer
-          description: Идентификатор заказа
         amount:
           type: number
           format: float
-          description: Сумма платежа
         method:
           type: string
-          description: Способ оплаты
         status:
           type: string
-          description: Статус платежа ('успешно', 'отменён', 'в процессе')
