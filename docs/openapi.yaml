@@ -91,60 +91,80 @@ components:
           $ref: '#/components/schemas/User'
 
 paths:
-  /auth/register:
-    post:
-      tags: [Authentication]
-      summary: Автоматическая регистрация
-      requestBody:
+ /auth/register:
+   post:
+     tags: [Authentication]
+     summary: Автоматическая регистрация
+     requestBody:
+       content:
+         application/json:
+           schema:
+             type: object
+             properties:
+               phone:
+                 type: string
+               email:
+                 type: string
+               name:
+                 type: string
+               password:
+                 type: string
+     responses:
+       '201':
+         description: User created
+       '400':
+         description: Invalid input
+       '409':
+         description: User already exists
+/auth/token:
+  post:
+    tags: [Authentication]
+    summary: Получить JWT токен
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              identifier:
+                type: string
+                description: Email, имя или номер телефона пользователя
+              password:
+                type: string
+    responses:
+      '200':
+        description: Успешный ответ
         content:
           application/json:
             schema:
-              type: object
-              properties:
-                phone:
-                  type: string
-                email:
-                  type: string
-      responses:
-        '201':
-          description: User created
+              $ref: '#/components/schemas/TokenResponse'
+      '400':
+        description: Некорректный запрос
+      '401':
+        description: Неверные учетные данные
+      '404':
+        description: Пользователь не найден
 
-  /auth/token:
-    post:
-      tags: [Authentication]
-      summary: Получить JWT токен
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                email:
-                  type: string
-                password:
-                  type: string
-      responses:
-        '200':
-          description: Успешный ответ
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/TokenResponse'
 
-  /auth/verify:
-    get:
-      tags: [Authentication]
-      summary: Проверить токен
-      security:
-        - BearerAuth: []
-      responses:
-        '200':
-          description: Токен действителен
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/VerifyResponse'
+
+ /auth/verify:
+   get:
+     tags: [Authentication]
+     summary: Проверить токен
+     security:
+       - BearerAuth: []
+     responses:
+       '200':
+         description: Токен действителен
+         content:
+           application/json:
+             schema:
+               $ref: '#/components/schemas/VerifyResponse'
+       '401':
+         description: Недействительный токен
+       '403':
+         description: Доступ запрещен
 
   /coworking-spaces:
     post:
