@@ -4,7 +4,11 @@ info:
   version: 1.0.0
   description: API для управления рабочими местами в коворкинге
 servers:
-  - url: https://coworking-api.example.com/workspaces 
+  - url: https://coworking-api.example.com/workspaces  
+
+security:
+  - BearerAuth: []
+
 paths:
   /workspaces:
     get:
@@ -26,12 +30,16 @@ paths:
           description: Unauthorized
         '500':
           description: Internal Server Error
+
     post:
       summary: Создание нового рабочего места
       description: Администратор может создать новое рабочее место
       operationId: createWorkspace
       tags:
         - Рабочие места
+      security:
+        - BearerAuth: []
+        - RoleCheck: [ADMIN]
       requestBody:
         required: true
         content:
@@ -54,8 +62,11 @@ paths:
           description: Неверные данные в запросе
         '401':
           description: Unauthorized
+        '403':
+          description: Недостаточно прав
         '500':
           description: Internal Server Error
+
   /workspaces/{workspaceId}:
     get:
       summary: Получение информации о конкретном рабочем месте
@@ -66,10 +77,11 @@ paths:
       parameters:
         - name: workspaceId
           in: path
-          description: Идентификатор рабочего места
+          description: Идентификатор рабочего места (UUID)
           required: true
           schema:
-            type: integer
+            type: string
+            format: uuid
       responses:
         '200':
           description: Успешный ответ
@@ -83,19 +95,24 @@ paths:
           description: Рабочее место не найдено
         '500':
           description: Internal Server Error
+
     put:
       summary: Обновление информации о рабочем месте
       description: Обновляет данные о рабочем месте (например, состояние, расположение)
       operationId: updateWorkspace
       tags:
         - Рабочие места
+      security:
+        - BearerAuth: []
+        - RoleCheck: [ADMIN]
       parameters:
         - name: workspaceId
           in: path
-          description: Идентификатор рабочего места
+          description: Идентификатор рабочего места (UUID)
           required: true
           schema:
-            type: integer
+            type: string
+            format: uuid
       requestBody:
         required: true
         content:
@@ -113,39 +130,166 @@ paths:
           description: Неверные данные в запросе
         '401':
           description: Unauthorized
+        '403':
+          description: Недостаточно прав
         '404':
           description: Рабочее место не найдено
         '500':
           description: Internal Server Error
+
     delete:
       summary: Удаление рабочего места
       description: Администратор может удалить рабочее место
       operationId: deleteWorkspace
+      security:
+        - BearerAuth: []
+        - RoleCheck: [ADMIN]
       tags:
         - Рабочие места
       parameters:
         - name: workspaceId
           in: path
-          description: Идентификатор рабочего места
+          description: Идентификатор рабочего места (UUID)
           required: true
           schema:
-            type: integer
+            type: string
+            format: uuid
       responses:
         '204':
           description: Рабочее место успешно удалено
+        '401':
+          description: Unauthorized
+        '403':
+          description: Недостаточно прав
+        '404':
+          description: Рабочее место не найдено
+        '500':
+          description: Internal Server Error
+
+  /workspaces/{workspaceId}/availability:
+    get:
+      summary: Получение информации о занятости рабочего места в конкретный промежуток времени
+      description: Возвращает информацию о занятости рабочего места в конкретный промежуток времени
+      operationId: getWorkspaceAvailability
+      tags:
+        - Рабочие места
+      parameters:
+        - name: workspaceId
+          in: path
+          description: Идентификатор рабочего места (UUID)
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: start
+          in: query
+          description: Начало промежутка времени (ISO 8601)
+          required: true
+          schema:
+            type: string
+            format: date-time
+        - name: end
+          in: query
+          description: Конец промежутка времени (ISO 8601)
+          required: true
+          schema:
+            type: string
+            format: date-time
+      responses:
+        '200':
+          description: Успешный ответ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkspaceAvailability'
         '401':
           description: Unauthorized
         '404':
           description: Рабочее место не найдено
         '500':
           description: Internal Server Error
+
+  /workspaces/{workspaceId}/bookings:
+    post:
+      summary: Бронирование рабочего места
+      description: Пользователь может забронировать рабочее место на определенное время
+      operationId: bookWorkspace
+      security:
+        - BearerAuth: []
+      tags:
+        - Бронирование
+      parameters:
+        - name: workspaceId
+          in: path
+          description: Идентификатор рабочего места (UUID)
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BookingRequest'
+      responses:
+        '201':
+          description: Рабочее место успешно забронировано
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BookingResponse'
+        '400':
+          description: Неверные данные в запросе
+        '401':
+          description: Unauthorized
+        '409':
+          description: Рабочее место уже занято в указанное время
+        '500':
+          description: Internal Server Error
+    get:
+      summary: Получение истории бронирований рабочего места
+      description: Возвращает список бронирований для конкретного рабочего места
+      operationId: getWorkspaceBookings
+      security:
+        - BearerAuth: []
+        - RoleCheck: [ADMIN]
+      tags:
+        - Бронирование
+      parameters:
+        - name: workspaceId
+          in: path
+          description: Идентификатор рабочего места (UUID)
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Успешный ответ
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/BookingResponse'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Недостаточно прав
+        '404':
+          description: Рабочее место не найдено
+        '500':
+          description: Internal Server Error
+
 components:
   schemas:
     Workspace:
       type: object
       properties:
         id:
-          type: integer
+          type: string
+          format: uuid
           description: Уникальный идентификатор рабочего места
         name:
           type: string
@@ -171,6 +315,13 @@ components:
         availability:
           type: boolean
           description: Доступность для бронирования
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
     CreateWorkspaceRequest:
       type: object
       properties:
@@ -195,6 +346,10 @@ components:
           items:
             type: string
           description: Особенности рабочего места
+        availability:
+          type: boolean
+          description: Доступность для бронирования
+
     UpdateWorkspaceRequest:
       type: object
       properties:
@@ -219,3 +374,73 @@ components:
           items:
             type: string
           description: Обновленные особенности рабочего места
+        availability:
+          type: boolean
+          description: Обновленная доступность для бронирования
+
+    WorkspaceAvailability:
+      type: object
+      properties:
+        workspaceId:
+          type: string
+          format: uuid
+          description: Уникальный идентификатор рабочего места
+        start:
+          type: string
+          format: date-time
+          description: Начало промежутка времени
+        end:
+          type: string
+          format: date-time
+          description: Конец промежутка времени
+        isAvailable:
+          type: boolean
+          description: Доступность рабочего места в указанный промежуток времени
+
+    BookingRequest:
+      type: object
+      properties:
+        userId:
+          type: string
+          format: uuid
+        start:
+          type: string
+          format: date-time
+        end:
+          type: string
+          format: date-time
+
+    BookingResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        workspaceId:
+          type: string
+          format: uuid
+        userId:
+          type: string
+          format: uuid
+        start:
+          type: string
+          format: date-time
+        end:
+          type: string
+          format: date-time
+        status:
+          type: string
+          description: Статус бронирования (confirmed, canceled)
+        createdAt:
+          type: string
+          format: date-time
+
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+    RoleCheck:
+      type: apiKey
+      in: header
+      name: X-User-Role
